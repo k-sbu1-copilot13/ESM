@@ -1,0 +1,70 @@
+# Server configuration
+server:
+  port: 8080
+
+# Common database configuration
+spring:
+  application:
+    name: esm_project
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:apiservice_db}
+    driverClassName: org.postgresql.Driver
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+
+# Flyway configuration
+flyway:
+  user: ${DB_USERNAME:postgres}
+  password: ${DB_PASSWORD:postgres}
+  schemas: public
+  url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:apiservice_db}
+  locations: classpath:db/migration
+
+# Enable Actuator endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+# Custom info
+info:
+  app:
+    name: ${spring.application.name}
+    description: Spring Boot API Service
+    version: 0.0.1-SNAPSHOT
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:8Zz5tw0Ionm3XPZZfN0NOml3z9FMfmpgXwovR9fp6ryDIoGRM8EPHAB6iHsc0fbT3GMYz5lLd9LWYEKIj8LZ0JV1KwZAdPXW}
+  access-token:
+    expiration: 3600000
+  refresh-token:
+    expiration: 86400000
+
+# Logging
+logging:
+  level:
+    org:
+      springframework:
+        security: INFO
+
+# Swagger/OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+    tryItOutEnabled: true
+    filter: true
+    disable-swagger-default-url: true
