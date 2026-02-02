@@ -41,7 +41,7 @@ CREATE TABLE submissions (
     template_id BIGINT NOT NULL REFERENCES form_templates(id),
     employee_id BIGINT NOT NULL REFERENCES users(id),
     form_data JSONB NOT NULL, -- Dữ liệu động
-    status VARCHAR(20) DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED')),
+    status VARCHAR(20) DEFAULT 'DRAFT' CHECK (status IN ('DRAFT', 'PENDING', 'APPROVED', 'REJECTED')),
     current_step INTEGER DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

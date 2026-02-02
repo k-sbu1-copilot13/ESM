@@ -4,6 +4,7 @@ import com.example.esm_project.dto.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
@@ -72,6 +73,23 @@ public class GlobalExceptionHandler {
                 HttpStatus.FORBIDDEN.value(),
                 "Forbidden",
                 ex.getMessage(),
+                request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
+
+    /**
+     * Handle access denied exception (unauthorized role)
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied(
+            AccessDeniedException ex,
+            HttpServletRequest request) {
+
+        ErrorResponse error = new ErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.FORBIDDEN.value(),
+                "Forbidden",
+                "You do not have permission to access this resource",
                 request.getRequestURI());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }

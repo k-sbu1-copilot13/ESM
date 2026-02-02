@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -12,6 +13,7 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     /**
@@ -28,7 +30,8 @@ public class SecurityConfig {
      * Required for authenticating users during login
      */
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+            throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
@@ -43,6 +46,7 @@ public class SecurityConfig {
                 .formLogin(form -> form.disable()) // Disable form login (this is a REST API)
                 .httpBasic(basic -> basic.disable()) // Disable HTTP Basic authentication
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/admin/**").permitAll() // Allow admin APIs for testing
                         .anyRequest().permitAll() // Allow all requests for development
                 );
 
