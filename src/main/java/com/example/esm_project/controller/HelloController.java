@@ -14,6 +14,6 @@ public class HelloController {
     @GetMapping
     @Operation(summary = "Chào mừng", description = "Trả về một thông điệp chào mừng đơn giản.")
     public String sayHello() {
-        return "Xin chào từ Spring Boot 4!";
+        return "Xin chào từ Spring Boot!";
     }
 }

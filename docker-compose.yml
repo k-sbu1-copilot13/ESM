@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: esm_db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-esm_db}
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - "${DB_PORT:-5433}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres} -d ${DB_NAME:-esm_db}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: esm_app
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=${DB_NAME:-esm_db}
+      - DB_USERNAME=${DB_USERNAME:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_FLYWAY_URL=jdbc:postgresql://db:5432/${DB_NAME:-esm_db}
+      - SPRING_FLYWAY_USER=${DB_USERNAME:-postgres}
+      - SPRING_FLYWAY_PASSWORD=${DB_PASSWORD:-postgres}
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
