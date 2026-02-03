@@ -1,15 +1,14 @@
 package com.example.esm_project.entity;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "submissions")
@@ -31,9 +30,9 @@ public class Submission {
     @JoinColumn(name = "employee_id", nullable = false)
     private User employee;
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "form_data", nullable = false)
-    private JsonNode formData;
+    @OneToMany(mappedBy = "submission", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<SubmissionValue> values = new ArrayList<>();
 
     @Column(length = 20)
     @Builder.Default

@@ -34,4 +34,8 @@ public class TemplateField {
 
     @Column(name = "display_order")
     private Integer displayOrder;
+
+    @Column(name = "is_active")
+    @Builder.Default
+    private boolean isActive = true;
 }
