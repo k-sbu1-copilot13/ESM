@@ -52,4 +52,16 @@ public class UserService {
                 savedUser.getRole(),
                 savedUser.getStatus());
     }
+
+    @Transactional(readOnly = true)
+    public java.util.List<RegisterResponse> getManagers() {
+        return userRepository.findByRole("MANAGER").stream()
+                .map(user -> new RegisterResponse(
+                        user.getId(),
+                        user.getUsername(),
+                        user.getFullName(),
+                        user.getRole(),
+                        user.getStatus()))
+                .collect(java.util.stream.Collectors.toList());
+    }
 }

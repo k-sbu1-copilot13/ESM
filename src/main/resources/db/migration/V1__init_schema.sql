@@ -24,7 +24,8 @@ CREATE TABLE template_fields (
     component_type VARCHAR(50) NOT NULL, 
     label VARCHAR(200) NOT NULL,
     is_required BOOLEAN DEFAULT FALSE,
-    display_order INTEGER NOT NULL
+    display_order INTEGER NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE
 );
 
 -- 4. Bảng Workflow Configs (Cấu hình người duyệt)
@@ -40,13 +41,22 @@ CREATE TABLE submissions (
     id BIGSERIAL PRIMARY KEY,
     template_id BIGINT NOT NULL REFERENCES form_templates(id),
     employee_id BIGINT NOT NULL REFERENCES users(id),
-    form_data JSONB NOT NULL, -- Dữ liệu động
-    status VARCHAR(20) DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED')),
+    status VARCHAR(20) DEFAULT 'DRAFT' CHECK (status IN ('DRAFT', 'PENDING', 'APPROVED', 'REJECTED')),
     current_step INTEGER DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    reset_at TIMESTAMP
+);
+
+-- 6. Bảng Submission Values (Mô hình EAV)
+CREATE TABLE submission_values (
+    id BIGSERIAL PRIMARY KEY,
+    submission_id BIGINT NOT NULL REFERENCES submissions(id) ON DELETE CASCADE,
+    field_id BIGINT NOT NULL REFERENCES template_fields(id),
+    field_value TEXT, -- Lưu mọi thứ dạng chuỗi
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 6. Bảng Approval Logs (Lịch sử duyệt)
+-- 7. Bảng Approval Logs (Lịch sử duyệt)
 CREATE TABLE approval_logs (
     id BIGSERIAL PRIMARY KEY,
     submission_id BIGINT NOT NULL REFERENCES submissions(id), 

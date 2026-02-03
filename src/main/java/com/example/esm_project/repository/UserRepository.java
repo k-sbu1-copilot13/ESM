@@ -24,4 +24,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * @return Optional containing user if found, empty otherwise
      */
     Optional<User> findByUsername(String username);
+
+    /**
+     * Find all users with a specific role
+     * 
+     * @param role role name
+     * @return List of users
+     */
+    java.util.List<User> findByRole(String role);
 }

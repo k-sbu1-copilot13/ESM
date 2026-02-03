@@ -28,4 +28,10 @@ public class UserController {
         RegisterResponse response = userService.registerUser(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
+    @org.springframework.web.bind.annotation.GetMapping("/managers")
+    @Operation(summary = "Get list of managers", description = "Fetch all users with the role MANAGER")
+    public ResponseEntity<java.util.List<RegisterResponse>> getManagers() {
+        return ResponseEntity.ok(userService.getManagers());
+    }
 }
