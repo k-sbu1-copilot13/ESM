@@ -85,6 +85,18 @@ public class SubmissionService {
         // 4. Validate and Create Submission Values
         submission.getValues().clear(); // Ensure we start fresh (clears old values if update)
 
+        if (request.getValues() != null) {
+            java.util.Set<Long> validFieldIds = template.getFields().stream()
+                    .map(TemplateField::getId)
+                    .collect(java.util.stream.Collectors.toSet());
+
+            for (Long fieldId : request.getValues().keySet()) {
+                if (!validFieldIds.contains(fieldId)) {
+                    throw new IllegalArgumentException("Field ID " + fieldId + " does not belong to this template");
+                }
+            }
+        }
+
         for (TemplateField field : template.getFields()) {
             String value = request.getValues() != null ? request.getValues().get(field.getId()) : null;
 

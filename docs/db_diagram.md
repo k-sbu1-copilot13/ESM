@@ -1,7 +1,5 @@
 # Database Diagram
 
-Dưới đây là sơ đồ thực thể - quan hệ (ER Diagram) đã được cập nhật dựa trên thay đổi trong `V1__init_schema.sql` (loại bỏ bảng `master_components`).
-
 ## Sơ đồ Mermaid
 
 ```mermaid
@@ -30,6 +28,7 @@ erDiagram
         varchar label
         boolean is_required
         integer display_order
+        boolean is_active
     }
 
     workflow_configs {
@@ -43,9 +42,17 @@ erDiagram
         bigint id PK
         bigint template_id FK
         bigint employee_id FK
-        jsonb form_data
         varchar status
         integer current_step
+        timestamp created_at
+        timestamp reset_at
+    }
+
+    submission_values {
+        bigint id PK
+        bigint submission_id FK
+        bigint field_id FK
+        text field_value
         timestamp created_at
     }
 
@@ -64,6 +71,8 @@ erDiagram
     users ||--o{ workflow_configs : "acts as manager"
     form_templates ||--o{ submissions : "has"
     users ||--o{ submissions : "submits"
+    submissions ||--o{ submission_values : "has values"
+    template_fields ||--o{ submission_values : "stores value for"
     submissions ||--o{ approval_logs : "tracked in"
     users ||--o{ approval_logs : "approves/rejects"
 ```
@@ -74,7 +83,8 @@ erDiagram
 | :--- | :--- |
 | `users` | Lưu thông tin người dùng và vai trò (ADMIN, MANAGER, EMPLOYEE). |
 | `form_templates` | Chứa thông tin về tiêu đề và mô tả của các loại đơn. |
-| `template_fields` | Các trường nhập liệu thuộc về một form template. Trường `component_type` lưu loại input trực tiếp (không qua bảng trung gian). |
+| `template_fields` | Các trường nhập liệu thuộc về một form template. |
 | `workflow_configs` | Cấu hình luồng phê duyệt (các bước duyệt và người duyệt tương ứng). |
-| `submissions` | Dữ liệu thực tế của các đơn đã được nhân viên nộp. |
+| `submissions` | Thông tin chung của đơn đã nộp (người nộp, trạng thái, bước hiện tại). |
+| `submission_values` | **(EAV Model)** Lưu dữ liệu thực tế cho từng trường của đơn nộp. |
 | `approval_logs` | Lịch sử phê duyệt từng bước của các cấp quản lý. |
