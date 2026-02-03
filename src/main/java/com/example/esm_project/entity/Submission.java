@@ -1,5 +1,6 @@
 package com.example.esm_project.entity;
 
+import com.example.esm_project.enums.SubmissionStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -34,13 +35,17 @@ public class Submission {
     @Builder.Default
     private List<SubmissionValue> values = new ArrayList<>();
 
+    @Enumerated(EnumType.STRING)
     @Column(length = 20)
     @Builder.Default
-    private String status = "PENDING";
+    private SubmissionStatus status = SubmissionStatus.PENDING;
 
     @Column(name = "current_step")
     @Builder.Default
     private Integer currentStep = 1;
+
+    @Column(name = "reset_at")
+    private LocalDateTime resetAt;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

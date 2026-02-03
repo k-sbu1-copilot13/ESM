@@ -3,11 +3,16 @@ package com.example.esm_project.service;
 import com.example.esm_project.dto.SubmissionRequest;
 import com.example.esm_project.dto.SubmissionResponse;
 import com.example.esm_project.dto.SubmissionValueResponse;
+import com.example.esm_project.dto.WorkflowStepStatusResponse;
+import com.example.esm_project.entity.ApprovalLog;
 import com.example.esm_project.entity.FormTemplate;
 import com.example.esm_project.entity.Submission;
 import com.example.esm_project.entity.SubmissionValue;
 import com.example.esm_project.entity.TemplateField;
 import com.example.esm_project.entity.User;
+import com.example.esm_project.enums.ApprovalAction;
+import com.example.esm_project.enums.SubmissionStatus;
+import com.example.esm_project.repository.ApprovalLogRepository;
 import com.example.esm_project.repository.FormTemplateRepository;
 import com.example.esm_project.repository.SubmissionRepository;
 import com.example.esm_project.repository.UserRepository;
@@ -15,7 +20,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,6 +31,7 @@ public class SubmissionService {
     private final SubmissionRepository submissionRepository;
     private final FormTemplateRepository formTemplateRepository;
     private final UserRepository userRepository;
+    private final ApprovalLogRepository approvalLogRepository;
 
     @Transactional
     public SubmissionResponse saveDraft(SubmissionRequest request, Long employeeId) {
@@ -47,16 +53,38 @@ public class SubmissionService {
         User employee = userRepository.findById(employeeId)
                 .orElseThrow(() -> new IllegalArgumentException("Employee not found with id: " + employeeId));
 
-        // 3. Create Submission
-        Submission submission = Submission.builder()
-                .template(template)
-                .employee(employee)
-                .status(isSubmit ? "PENDING" : "DRAFT")
-                .currentStep(1)
-                .build();
+        Submission submission;
+        // 3. Create or Fetch Submission
+        if (request.getId() != null) {
+            submission = submissionRepository.findById(request.getId())
+                    .orElseThrow(
+                            () -> new IllegalArgumentException("Submission not found with id: " + request.getId()));
+
+            // Validation for Update
+            if (!submission.getEmployee().getId().equals(employeeId)) {
+                throw new IllegalArgumentException("You are not authorized to update this submission");
+            }
+            if (submission.getStatus() != SubmissionStatus.DRAFT
+                    && submission.getStatus() != SubmissionStatus.REJECTED) {
+                throw new IllegalArgumentException("Only DRAFT or REJECTED submissions can be edited");
+            }
+
+            // Update Status & Reset Progress
+            submission.setStatus(isSubmit ? SubmissionStatus.PENDING : SubmissionStatus.DRAFT);
+            submission.setCurrentStep(1);
+            submission.setResetAt(LocalDateTime.now()); // Set reset point
+        } else {
+            submission = Submission.builder()
+                    .template(template)
+                    .employee(employee)
+                    .status(isSubmit ? SubmissionStatus.PENDING : SubmissionStatus.DRAFT)
+                    .currentStep(1)
+                    .build();
+        }
 
         // 4. Validate and Create Submission Values
-        List<SubmissionValue> submissionValues = new ArrayList<>();
+        submission.getValues().clear(); // Ensure we start fresh (clears old values if update)
+
         for (TemplateField field : template.getFields()) {
             String value = request.getValues() != null ? request.getValues().get(field.getId()) : null;
 
@@ -69,7 +97,7 @@ public class SubmissionService {
             if (value != null && !value.trim().isEmpty()) {
                 field.getComponentType().validate(field.getLabel(), value);
 
-                submissionValues.add(SubmissionValue.builder()
+                submission.getValues().add(SubmissionValue.builder()
                         .submission(submission)
                         .field(field)
                         .fieldValue(value)
@@ -77,7 +105,6 @@ public class SubmissionService {
             }
         }
 
-        submission.setValues(submissionValues);
         Submission saved = submissionRepository.save(submission);
         return mapToResponse(saved);
     }
@@ -92,7 +119,19 @@ public class SubmissionService {
                 .collect(Collectors.toList());
     }
 
-    private SubmissionResponse mapToResponse(Submission s) {
+    @Transactional(readOnly = true)
+    public SubmissionResponse getSubmissionDetail(Long id, Long employeeId) {
+        Submission submission = submissionRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Submission not found"));
+
+        if (!submission.getEmployee().getId().equals(employeeId)) {
+            throw new IllegalArgumentException("Unauthorized");
+        }
+
+        return mapToResponse(submission);
+    }
+
+    public SubmissionResponse mapToResponse(Submission s) {
         List<SubmissionValueResponse> values = s.getValues().stream()
                 .map(v -> SubmissionValueResponse.builder()
                         .fieldId(v.getField().getId())
@@ -102,15 +141,48 @@ public class SubmissionService {
                         .build())
                 .collect(Collectors.toList());
 
-        return SubmissionResponse.builder()
-                .id(s.getId())
-                .templateId(s.getTemplate().getId())
-                .templateTitle(s.getTemplate().getTitle())
-                .employeeName(s.getEmployee().getFullName())
-                .submissionValues(values)
-                .status(s.getStatus())
-                .currentStep(s.getCurrentStep())
-                .createdAt(s.getCreatedAt())
-                .build();
+        // Map Workflow Steps Status
+        List<ApprovalLog> allLogs = approvalLogRepository.findBySubmissionOrderByCreatedAtAsc(s);
+
+        // Filter out logs from previous cycles (before reset_at)
+        final List<ApprovalLog> logs;
+        if (s.getResetAt() != null) {
+            logs = allLogs.stream()
+                    .filter(l -> l.getCreatedAt().isAfter(s.getResetAt()))
+                    .collect(Collectors.toList());
+        } else {
+            logs = allLogs;
+        }
+
+        List<WorkflowStepStatusResponse> workflowSteps = s.getTemplate().getWorkflowConfigs().stream()
+                .map(config -> {
+                    // Find if there's a log for this step
+                    ApprovalLog stepLog = logs.stream()
+                            .filter(l -> l.getAtStep().equals(config.getStepOrder()))
+                            .findFirst()
+                            .orElse(null);
+
+                    String stepStatus = "PENDING";
+                    if (stepLog != null) {
+                        stepStatus = stepLog.getAction() == ApprovalAction.APPROVE ? "APPROVED" : "REJECTED";
+                    } else if (s.getStatus() == SubmissionStatus.REJECTED) {
+                        stepStatus = "SKIPPED";
+                    }
+
+                    return WorkflowStepStatusResponse.builder()
+                            .stepOrder(config.getStepOrder())
+                            .managerId(config.getManager().getId())
+                            .managerName(config.getManager().getFullName())
+                            .status(stepStatus)
+                            .comment(stepLog != null ? stepLog.getComment() : null)
+                            .updatedAt(stepLog != null ? stepLog.getCreatedAt() : null)
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        return SubmissionResponse.builder().id(s.getId()).templateId(s.getTemplate().getId())
+                .templateTitle(s.getTemplate().getTitle()).employeeId(s.getEmployee().getId())
+                .employeeName(s.getEmployee().getFullName()).submissionValues(values).workflowSteps(workflowSteps)
+                .status(s.getStatus()).currentStep(s.getCurrentStep()).createdAt(s.getCreatedAt()).build();
     }
 }

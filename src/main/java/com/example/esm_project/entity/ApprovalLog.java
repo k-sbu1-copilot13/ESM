@@ -1,5 +1,6 @@
 package com.example.esm_project.entity;
 
+import com.example.esm_project.enums.ApprovalAction;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,8 +29,9 @@ public class ApprovalLog {
     @JoinColumn(name = "manager_id", nullable = false)
     private User manager;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private String action;
+    private ApprovalAction action;
 
     @Column(columnDefinition = "TEXT")
     private String comment;

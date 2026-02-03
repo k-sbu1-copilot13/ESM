@@ -6,6 +6,7 @@ import com.example.esm_project.service.SubmissionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,7 +23,7 @@ public class SubmissionController {
     @PostMapping("/draft")
     @Operation(summary = "Save a draft", description = "Save form data as a draft. Skips required field validation.")
     public ResponseEntity<SubmissionResponse> saveDraft(
-            @RequestBody SubmissionRequest request,
+            @Valid @RequestBody SubmissionRequest request,
             @RequestHeader("X-Employee-Id") Long employeeId) {
         return ResponseEntity.ok(submissionService.saveDraft(request, employeeId));
     }
@@ -30,7 +31,7 @@ public class SubmissionController {
     @PostMapping("/submit")
     @Operation(summary = "Submit a form", description = "Submit form data for approval. Performs strict validation on required fields.")
     public ResponseEntity<SubmissionResponse> submit(
-            @RequestBody SubmissionRequest request,
+            @Valid @RequestBody SubmissionRequest request,
             @RequestHeader("X-Employee-Id") Long employeeId) {
         return ResponseEntity.ok(submissionService.submit(request, employeeId));
     }
@@ -40,5 +41,13 @@ public class SubmissionController {
     public ResponseEntity<List<SubmissionResponse>> getMySubmissions(
             @RequestHeader("X-Employee-Id") Long employeeId) {
         return ResponseEntity.ok(submissionService.getMySubmissions(employeeId));
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Get submission detail", description = "Retrieve full details of a specific submission")
+    public ResponseEntity<SubmissionResponse> getSubmissionDetail(
+            @PathVariable Long id,
+            @RequestHeader("X-Employee-Id") Long employeeId) {
+        return ResponseEntity.ok(submissionService.getSubmissionDetail(id, employeeId));
     }
 }
