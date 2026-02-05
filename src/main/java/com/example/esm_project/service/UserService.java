@@ -5,6 +5,8 @@ import com.example.esm_project.dto.RegisterResponse;
 import com.example.esm_project.entity.User;
 import com.example.esm_project.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,14 +56,18 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public java.util.List<RegisterResponse> getManagers() {
-        return userRepository.findByRole("MANAGER").stream()
-                .map(user -> new RegisterResponse(
-                        user.getId(),
-                        user.getUsername(),
-                        user.getFullName(),
-                        user.getRole(),
-                        user.getStatus()))
-                .collect(java.util.stream.Collectors.toList());
+    public Page<RegisterResponse> getManagers(String search, Pageable pageable) {
+        Page<User> users;
+        if (search != null && !search.trim().isEmpty()) {
+            users = userRepository.searchManagers("MANAGER", search, pageable);
+        } else {
+            users = userRepository.findByRole("MANAGER", pageable);
+        }
+        return users.map(user -> new RegisterResponse(
+                user.getId(),
+                user.getUsername(),
+                user.getFullName(),
+                user.getRole(),
+                user.getStatus()));
     }
 }

@@ -31,4 +31,6 @@ public class FormTemplateRequest {
     @NotEmpty(message = "Template must have at least one workflow step")
     @Valid
     private List<WorkflowConfigRequest> workflowSteps;
+
+    private Boolean active;
 }

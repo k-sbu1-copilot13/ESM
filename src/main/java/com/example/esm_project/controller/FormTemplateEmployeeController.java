@@ -8,7 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @RestController
 @RequestMapping("/api/form-templates")
@@ -20,8 +22,10 @@ public class FormTemplateEmployeeController {
 
     @GetMapping
     @Operation(summary = "Get all active form templates", description = "Retrieve a list of templates that are currently active")
-    public ResponseEntity<List<FormTemplateResponse>> getActiveTemplates() {
-        return ResponseEntity.ok(formTemplateService.getActiveTemplates());
+    public ResponseEntity<Page<FormTemplateResponse>> getActiveTemplates(
+            @RequestParam(required = false) String search,
+            @ParameterObject Pageable pageable) {
+        return ResponseEntity.ok(formTemplateService.getActiveTemplates(search, pageable));
     }
 
     @GetMapping("/{id}")
