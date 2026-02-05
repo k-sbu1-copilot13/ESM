@@ -49,6 +49,7 @@ public class AuthService {
 
         // Return response
         return new LoginResponse(
+                user.getId(),
                 token,
                 user.getUsername(),
                 user.getRole(),

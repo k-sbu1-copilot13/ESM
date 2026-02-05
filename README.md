@@ -32,6 +32,9 @@ docker-compose up -d
 
 # Xem log
 docker-compose logs -f
+
+# Bật Database
+docker compose up db -d
 ```
 
 ### 4. Chạy trực tiếp qua Gradle (Local)

@@ -9,7 +9,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @RestController
 @RequestMapping("/api/admin/form-templates")
@@ -25,8 +27,10 @@ public class FormTemplateController {
     }
 
     @GetMapping
-    public ResponseEntity<List<FormTemplateResponse>> getAllTemplates() {
-        return ResponseEntity.ok(formTemplateService.getAllTemplates());
+    public ResponseEntity<Page<FormTemplateResponse>> getAllTemplates(
+            @RequestParam(required = false) String search,
+            @ParameterObject Pageable pageable) {
+        return ResponseEntity.ok(formTemplateService.getAllTemplates(search, pageable));
     }
 
     @GetMapping("/{id}")

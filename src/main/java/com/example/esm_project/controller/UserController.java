@@ -7,12 +7,12 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/users")
@@ -29,9 +29,11 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @org.springframework.web.bind.annotation.GetMapping("/managers")
-    @Operation(summary = "Get list of managers", description = "Fetch all users with the role MANAGER")
-    public ResponseEntity<java.util.List<RegisterResponse>> getManagers() {
-        return ResponseEntity.ok(userService.getManagers());
+    @GetMapping("/managers")
+    @Operation(summary = "Get list of managers", description = "Fetch users with the role MANAGER with search and pagination support")
+    public ResponseEntity<Page<RegisterResponse>> getManagers(
+            @RequestParam(required = false) String search,
+            @ParameterObject Pageable pageable) {
+        return ResponseEntity.ok(userService.getManagers(search, pageable));
     }
 }

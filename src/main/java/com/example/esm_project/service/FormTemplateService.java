@@ -9,6 +9,8 @@ import com.example.esm_project.entity.WorkflowConfig;
 import com.example.esm_project.repository.FormTemplateRepository;
 import com.example.esm_project.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,7 +28,7 @@ public class FormTemplateService {
         FormTemplate template = FormTemplate.builder()
                 .title(request.getTitle())
                 .description(request.getDescription())
-                .isActive(true)
+                .isActive(request.getActive() != null ? request.getActive() : true)
                 .build();
 
         // Handle Fields
@@ -75,10 +77,14 @@ public class FormTemplateService {
     }
 
     @Transactional(readOnly = true)
-    public java.util.List<FormTemplateResponse> getAllTemplates() {
-        return formTemplateRepository.findAll().stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+    public Page<FormTemplateResponse> getAllTemplates(String search, Pageable pageable) {
+        Page<FormTemplate> templates;
+        if (search != null && !search.trim().isEmpty()) {
+            templates = formTemplateRepository.findByTitleContainingIgnoreCase(search, pageable);
+        } else {
+            templates = formTemplateRepository.findAll(pageable);
+        }
+        return templates.map(this::mapToResponse);
     }
 
     @Transactional
@@ -88,6 +94,9 @@ public class FormTemplateService {
 
         template.setTitle(request.getTitle());
         template.setDescription(request.getDescription());
+        if (request.getActive() != null) {
+            template.setActive(request.getActive());
+        }
 
         // Update Fields
         template.getFields().clear();
@@ -147,10 +156,14 @@ public class FormTemplateService {
     }
 
     @Transactional(readOnly = true)
-    public java.util.List<FormTemplateResponse> getActiveTemplates() {
-        return formTemplateRepository.findByIsActiveTrue().stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+    public Page<FormTemplateResponse> getActiveTemplates(String search, Pageable pageable) {
+        Page<FormTemplate> templates;
+        if (search != null && !search.trim().isEmpty()) {
+            templates = formTemplateRepository.findByTitleContainingIgnoreCaseAndIsActiveTrue(search, pageable);
+        } else {
+            templates = formTemplateRepository.findByIsActiveTrue(pageable);
+        }
+        return templates.map(this::mapToResponse);
     }
 
     @Transactional(readOnly = true)
