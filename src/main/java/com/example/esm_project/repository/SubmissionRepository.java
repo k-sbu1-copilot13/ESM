@@ -48,4 +48,18 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
                         com.example.esm_project.enums.SubmissionStatus status,
                         String templateTitle,
                         org.springframework.data.domain.Pageable pageable);
+
+        @EntityGraph(attributePaths = { "template", "values", "values.field" })
+        @org.springframework.data.jpa.repository.Query("SELECT s FROM Submission s JOIN WorkflowConfig wc ON s.template = wc.template "
+                        +
+                        "WHERE wc.manager.id = :managerId " +
+                        "AND s.currentStep = wc.stepOrder " +
+                        "AND s.status = 'PENDING' " +
+                        "AND (:search IS NULL OR LOWER(s.template.title) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) "
+                        +
+                        "ORDER BY s.createdAt DESC")
+        org.springframework.data.domain.Page<Submission> findPendingByManager(
+                        @org.springframework.data.repository.query.Param("managerId") Long managerId,
+                        @org.springframework.data.repository.query.Param("search") String search,
+                        org.springframework.data.domain.Pageable pageable);
 }
