@@ -35,6 +35,10 @@ public class Submission {
     @Builder.Default
     private List<SubmissionValue> values = new ArrayList<>();
 
+    @OneToMany(mappedBy = "submission", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<ApprovalLog> approvalLogs = new ArrayList<>();
+
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
     @Builder.Default

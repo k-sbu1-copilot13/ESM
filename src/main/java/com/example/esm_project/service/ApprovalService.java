@@ -1,6 +1,7 @@
 package com.example.esm_project.service;
 
 import com.example.esm_project.dto.ApprovalActionRequest;
+import com.example.esm_project.dto.ApprovalHistoryResponse;
 import com.example.esm_project.dto.SubmissionResponse;
 import com.example.esm_project.entity.ApprovalLog;
 import com.example.esm_project.entity.Submission;
@@ -13,6 +14,8 @@ import com.example.esm_project.repository.SubmissionRepository;
 import com.example.esm_project.repository.UserRepository;
 import com.example.esm_project.repository.WorkflowConfigRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -88,5 +91,49 @@ public class ApprovalService {
         Submission saved = submissionRepository.save(submission);
 
         return submissionService.mapToResponse(saved);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<SubmissionResponse> getPendingSubmissionsForManager(Long managerId, String search, Pageable pageable) {
+        return submissionRepository.findPendingByManager(managerId, search, pageable)
+                .map(submissionService::mapToResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public SubmissionResponse getSubmissionDetailForManager(Long id, Long managerId) {
+        // 1. Fetch Submission
+        Submission submission = submissionRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Submission not found with id: " + id));
+
+        // 2. Authorization: Kiểm tra xem manager này có được quyền xem đơn này không
+        // Quyền xem: manager đã từng tham gia xử lý (có trong approval_logs)
+        boolean hasParticipated = approvalLogRepository.existsBySubmissionIdAndManagerId(id, managerId);
+
+        if (!hasParticipated) {
+            throw new IllegalArgumentException(
+                    "You are not authorized to view this submission as you have not participated in its approval process.");
+        }
+
+        // 3. Map to Response
+        return submissionService.mapToResponse(submission);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ApprovalHistoryResponse> getApprovalHistory(Long managerId, String search, Pageable pageable) {
+        return approvalLogRepository.findHistoryByManager(managerId, search, pageable)
+                .map(this::mapHistory);
+    }
+
+    private ApprovalHistoryResponse mapHistory(ApprovalLog log) {
+        return ApprovalHistoryResponse.builder()
+                .id(log.getId())
+                .submissionId(log.getSubmission().getId())
+                .templateTitle(log.getSubmission().getTemplate().getTitle())
+                .employeeName(log.getSubmission().getEmployee().getFullName())
+                .action(log.getAction())
+                .comment(log.getComment())
+                .atStep(log.getAtStep())
+                .actedAt(log.getCreatedAt())
+                .build();
     }
 }
