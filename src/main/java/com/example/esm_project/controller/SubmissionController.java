@@ -43,11 +43,38 @@ public class SubmissionController {
         return ResponseEntity.ok(submissionService.getMySubmissions(employeeId));
     }
 
+    @GetMapping("/me/drafts")
+    @Operation(summary = "Get my draft submissions", description = "Retrieve all draft submissions by the current employee with pagination and search")
+    public ResponseEntity<org.springframework.data.domain.Page<SubmissionResponse>> getMyDrafts(
+            @RequestHeader("X-Employee-Id") Long employeeId,
+            @RequestParam(required = false) String search,
+            @org.springdoc.core.annotations.ParameterObject org.springframework.data.domain.Pageable pageable) {
+        return ResponseEntity.ok(submissionService.getMyDraftsPaginated(employeeId, search, pageable));
+    }
+
+    @GetMapping("/me/submitted")
+    @Operation(summary = "Get my submitted submissions", description = "Retrieve all submitted forms (PENDING, APPROVED, REJECTED) by the current employee with pagination and search")
+    public ResponseEntity<org.springframework.data.domain.Page<SubmissionResponse>> getMySubmittedSubmissions(
+            @RequestHeader("X-Employee-Id") Long employeeId,
+            @RequestParam(required = false) String search,
+            @org.springdoc.core.annotations.ParameterObject org.springframework.data.domain.Pageable pageable) {
+        return ResponseEntity.ok(submissionService.getMySubmittedSubmissionsPaginated(employeeId, search, pageable));
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "Get submission detail", description = "Retrieve full details of a specific submission")
     public ResponseEntity<SubmissionResponse> getSubmissionDetail(
             @PathVariable Long id,
             @RequestHeader("X-Employee-Id") Long employeeId) {
         return ResponseEntity.ok(submissionService.getSubmissionDetail(id, employeeId));
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete a submission", description = "Delete a submission. Only DRAFT submissions can be deleted.")
+    public ResponseEntity<Void> deleteSubmission(
+            @PathVariable Long id,
+            @RequestHeader("X-Employee-Id") Long employeeId) {
+        submissionService.deleteSubmission(id, employeeId);
+        return ResponseEntity.noContent().build();
     }
 }

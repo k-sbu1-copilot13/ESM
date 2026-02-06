@@ -132,6 +132,60 @@ public class SubmissionService {
     }
 
     @Transactional(readOnly = true)
+    public List<SubmissionResponse> getMyDrafts(Long employeeId) {
+        User employee = userRepository.findById(employeeId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        return submissionRepository.findByEmployeeAndStatusOrderByCreatedAtDesc(employee, SubmissionStatus.DRAFT)
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<SubmissionResponse> getMyDraftsPaginated(Long employeeId, String search,
+            org.springframework.data.domain.Pageable pageable) {
+        User employee = userRepository.findById(employeeId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        org.springframework.data.domain.Page<Submission> submissions;
+        if (search != null && !search.trim().isEmpty()) {
+            submissions = submissionRepository.findByEmployeeAndStatusAndTemplate_TitleContainingIgnoreCase(
+                    employee, SubmissionStatus.DRAFT, search, pageable);
+        } else {
+            submissions = submissionRepository.findByEmployeeAndStatus(employee, SubmissionStatus.DRAFT, pageable);
+        }
+        return submissions.map(this::mapToResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public List<SubmissionResponse> getMySubmittedSubmissions(Long employeeId) {
+        User employee = userRepository.findById(employeeId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        return submissionRepository.findByEmployeeAndStatusNotOrderByCreatedAtDesc(employee, SubmissionStatus.DRAFT)
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<SubmissionResponse> getMySubmittedSubmissionsPaginated(Long employeeId,
+            String search, org.springframework.data.domain.Pageable pageable) {
+        User employee = userRepository.findById(employeeId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        org.springframework.data.domain.Page<Submission> submissions;
+        if (search != null && !search.trim().isEmpty()) {
+            submissions = submissionRepository.findByEmployeeAndStatusNotAndTemplate_TitleContainingIgnoreCase(
+                    employee, SubmissionStatus.DRAFT, search, pageable);
+        } else {
+            submissions = submissionRepository.findByEmployeeAndStatusNot(employee, SubmissionStatus.DRAFT, pageable);
+        }
+        return submissions.map(this::mapToResponse);
+    }
+
+    @Transactional(readOnly = true)
     public SubmissionResponse getSubmissionDetail(Long id, Long employeeId) {
         Submission submission = submissionRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Submission not found"));
@@ -141,6 +195,22 @@ public class SubmissionService {
         }
 
         return mapToResponse(submission);
+    }
+
+    @Transactional
+    public void deleteSubmission(Long id, Long employeeId) {
+        Submission submission = submissionRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Submission not found with id: " + id));
+
+        if (!submission.getEmployee().getId().equals(employeeId)) {
+            throw new IllegalArgumentException("You are not authorized to delete this submission");
+        }
+
+        if (submission.getStatus() != SubmissionStatus.DRAFT) {
+            throw new IllegalArgumentException("Only DRAFT submissions can be deleted");
+        }
+
+        submissionRepository.delete(submission);
     }
 
     public SubmissionResponse mapToResponse(Submission s) {
