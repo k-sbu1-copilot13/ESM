@@ -1,5 +1,8 @@
 package com.example.esm_project.config;
 
+import com.example.esm_project.security.JwtAuthenticationEntryPoint;
+import com.example.esm_project.security.JwtAuthenticationFilter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -11,6 +14,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -24,7 +28,11 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
+
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtAuthenticationEntryPoint unauthorizedHandler;
 
     private static final String[] PUBLIC_URLS = {
             "/api/auth/**",
@@ -79,11 +87,14 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // 1. Enable CORS and disable CSRF (standard for Stateless REST APIs)
+                // 1. Enable CORS and disable CSRF
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
 
-                // 2. Set Session Management to STATELESS (No JSESSIONID)
+                // 2. Exception Handling
+                .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
+
+                // 3. Set Session Management to STATELESS
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 // 3. Configure HTTP Basic/Form Login - Disabled for API
@@ -93,10 +104,14 @@ public class SecurityConfig {
                 // 4. Access Control Rules
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_URLS).permitAll()
-                        // During development, we keep /api/** open, but in production,
-                        // this should be .authenticated() or restricted by role.
-                        .requestMatchers("/api/**").permitAll()
-                        .anyRequest().authenticated());
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/users/managers").hasRole("ADMIN")
+                        .requestMatchers("/api/approvals/**").hasRole("MANAGER")
+                        .requestMatchers("/api/**").authenticated()
+                        .anyRequest().authenticated())
+
+                // 5. Add JWT Filter
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

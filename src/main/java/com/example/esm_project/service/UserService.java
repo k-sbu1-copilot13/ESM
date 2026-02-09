@@ -2,6 +2,7 @@ package com.example.esm_project.service;
 
 import com.example.esm_project.dto.RegisterRequest;
 import com.example.esm_project.dto.RegisterResponse;
+import com.example.esm_project.dto.UserProfileResponse;
 import com.example.esm_project.entity.User;
 import com.example.esm_project.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -69,5 +70,24 @@ public class UserService {
                 user.getFullName(),
                 user.getRole(),
                 user.getStatus()));
+    }
+
+    /**
+     * Get profile of the current authenticated user
+     * 
+     * @param username the username from security context
+     * @return UserProfileResponse
+     */
+    @Transactional(readOnly = true)
+    public UserProfileResponse getProfileByUsername(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found: " + username));
+
+        return new UserProfileResponse(
+                user.getId(),
+                user.getUsername(),
+                user.getFullName(),
+                user.getRole(),
+                user.getStatus());
     }
 }

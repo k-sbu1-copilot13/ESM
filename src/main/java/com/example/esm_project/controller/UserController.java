@@ -2,6 +2,7 @@ package com.example.esm_project.controller;
 
 import com.example.esm_project.dto.RegisterRequest;
 import com.example.esm_project.dto.RegisterResponse;
+import com.example.esm_project.dto.UserProfileResponse;
 import com.example.esm_project.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -12,6 +13,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -30,10 +33,18 @@ public class UserController {
     }
 
     @GetMapping("/managers")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get list of managers", description = "Fetch users with the role MANAGER with search and pagination support")
     public ResponseEntity<Page<RegisterResponse>> getManagers(
             @RequestParam(required = false) String search,
             @ParameterObject Pageable pageable) {
         return ResponseEntity.ok(userService.getManagers(search, pageable));
+    }
+
+    @GetMapping("/profile")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Get current user profile", description = "Retrieve all information of the currently authenticated user")
+    public ResponseEntity<UserProfileResponse> getProfile(Authentication authentication) {
+        return ResponseEntity.ok(userService.getProfileByUsername(authentication.getName()));
     }
 }

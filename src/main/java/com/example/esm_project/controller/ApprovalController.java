@@ -11,12 +11,14 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/approvals")
 @RequiredArgsConstructor
 @Tag(name = "Manager - Approval", description = "Endpoints for managers to approve or reject submissions")
+@PreAuthorize("hasRole('MANAGER')")
 public class ApprovalController {
 
     private final ApprovalService approvalService;
