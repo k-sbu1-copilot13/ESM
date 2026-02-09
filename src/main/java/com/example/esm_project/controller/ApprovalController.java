@@ -47,13 +47,16 @@ public class ApprovalController {
         return ResponseEntity.ok(approvalService.getPendingSubmissionsForManager(managerId, search, pageable));
     }
 
-    @GetMapping("/submissions/{id}")
-    @Operation(summary = "Get processed submission detail", description = "Retrieve full details of a submission that the manager has already processed.")
-    public ResponseEntity<SubmissionResponse> getProcessedSubmissionDetail(
-            @PathVariable Long id,
-            @RequestHeader("X-Manager-Id") Long managerId) {
-        return ResponseEntity.ok(approvalService.getSubmissionDetailForManager(id, managerId));
-    }
+    // @GetMapping("/submissions/{id}")
+    // @Operation(summary = "Get processed submission detail", description =
+    // "Retrieve full details of a submission that the manager has already
+    // processed.")
+    // public ResponseEntity<SubmissionResponse> getProcessedSubmissionDetail(
+    // @PathVariable Long id,
+    // @RequestHeader("X-Manager-Id") Long managerId) {
+    // return ResponseEntity.ok(approvalService.getSubmissionDetailForManager(id,
+    // managerId));
+    // }
 
     @GetMapping("/history")
     @Operation(summary = "Get approval history for manager", description = "Retrieve a paginated list of approval/rejection actions performed by the current manager.")
