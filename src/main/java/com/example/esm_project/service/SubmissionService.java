@@ -79,6 +79,7 @@ public class SubmissionService {
                     .employee(employee)
                     .status(isSubmit ? SubmissionStatus.PENDING : SubmissionStatus.DRAFT)
                     .currentStep(1)
+                    .createdAt(LocalDateTime.now()) // Set initial timestamp
                     .build();
         }
 

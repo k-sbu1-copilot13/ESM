@@ -10,6 +10,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 
 import java.util.List;
 
@@ -50,7 +52,7 @@ public class SubmissionController {
     public ResponseEntity<org.springframework.data.domain.Page<SubmissionResponse>> getMyDrafts(
             @RequestHeader("X-Employee-Id") Long employeeId,
             @RequestParam(required = false) String search,
-            @org.springdoc.core.annotations.ParameterObject org.springframework.data.domain.Pageable pageable) {
+            @org.springdoc.core.annotations.ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) org.springframework.data.domain.Pageable pageable) {
         return ResponseEntity.ok(submissionService.getMyDraftsPaginated(employeeId, search, pageable));
     }
 
@@ -59,7 +61,7 @@ public class SubmissionController {
     public ResponseEntity<org.springframework.data.domain.Page<SubmissionResponse>> getMySubmittedSubmissions(
             @RequestHeader("X-Employee-Id") Long employeeId,
             @RequestParam(required = false) String search,
-            @org.springdoc.core.annotations.ParameterObject org.springframework.data.domain.Pageable pageable) {
+            @org.springdoc.core.annotations.ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) org.springframework.data.domain.Pageable pageable) {
         return ResponseEntity.ok(submissionService.getMySubmittedSubmissionsPaginated(employeeId, search, pageable));
     }
 
