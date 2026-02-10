@@ -3,6 +3,7 @@ package com.example.esm_project.controller;
 import com.example.esm_project.dto.RegisterRequest;
 import com.example.esm_project.dto.RegisterResponse;
 import com.example.esm_project.dto.UserProfileResponse;
+import com.example.esm_project.dto.UserPrincipal;
 import com.example.esm_project.dto.UserUpdateRoleStatusRequest;
 import com.example.esm_project.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -71,6 +72,7 @@ public class UserController {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get current user profile", description = "Retrieve all information of the currently authenticated user")
     public ResponseEntity<UserProfileResponse> getProfile(Authentication authentication) {
-        return ResponseEntity.ok(userService.getProfileByUsername(authentication.getName()));
+        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+        return ResponseEntity.ok(userService.getProfileByUsername(principal.getUsername()));
     }
 }

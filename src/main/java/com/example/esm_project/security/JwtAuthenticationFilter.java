@@ -1,5 +1,6 @@
 package com.example.esm_project.security;
 
+import com.example.esm_project.dto.UserPrincipal;
 import com.example.esm_project.util.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -38,13 +39,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (jwt != null && jwtUtil.validateToken(jwt)) {
                 String username = jwtUtil.getUsernameFromToken(jwt);
                 String role = jwtUtil.getRoleFromToken(jwt);
+                Long userId = jwtUtil.getUserIdFromToken(jwt);
 
                 if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                    // Add "ROLE_" prefix as Spring Security expects it by default for hasRole
+                    // Create custom principal with ID
+                    UserPrincipal principal = UserPrincipal.builder()
+                            .id(userId)
+                            .username(username)
+                            .role(role)
+                            .build();
+
                     SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
 
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                            username,
+                            principal,
                             null,
                             List.of(authority));
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

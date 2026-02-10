@@ -106,10 +106,20 @@ public class ApprovalService {
                 .orElseThrow(() -> new IllegalArgumentException("Submission not found with id: " + id));
 
         // 2. Authorization: Kiểm tra xem manager này có được quyền xem đơn này không
-        // Quyền xem: manager đã từng tham gia xử lý (có trong approval_logs)
+        // Quyền xem 1: manager đã từng tham gia xử lý (có trong approval_logs)
         boolean hasParticipated = approvalLogRepository.existsBySubmissionIdAndManagerId(id, managerId);
 
-        if (!hasParticipated) {
+        // Quyền xem 2: manager đang là người có quyền approve ở step hiện tại (đơn ở
+        // trạng thái PENDING)
+        boolean isCurrentApprover = false;
+        if (SubmissionStatus.PENDING.equals(submission.getStatus())) {
+            isCurrentApprover = workflowConfigRepository
+                    .findByTemplateAndStepOrder(submission.getTemplate(), submission.getCurrentStep())
+                    .map(config -> config.getManager().getId().equals(managerId))
+                    .orElse(false);
+        }
+
+        if (!hasParticipated && !isCurrentApprover) {
             throw new IllegalArgumentException(
                     "You are not authorized to view this submission as you have not participated in its approval process.");
         }
