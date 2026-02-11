@@ -21,134 +21,151 @@ import java.time.LocalDateTime;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    /**
-     * Handle bad credentials exception (invalid username or password)
-     * For security reasons, we don't distinguish between invalid username and
-     * invalid password
-     */
-    @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ErrorResponse> handleBadCredentials(
-            BadCredentialsException ex,
-            HttpServletRequest request) {
+        /**
+         * Handle bad credentials exception (invalid username or password)
+         * For security reasons, we don't distinguish between invalid username and
+         * invalid password
+         */
+        @ExceptionHandler(BadCredentialsException.class)
+        public ResponseEntity<ErrorResponse> handleBadCredentials(
+                        BadCredentialsException ex,
+                        HttpServletRequest request) {
 
-        ErrorResponse error = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.UNAUTHORIZED.value(),
-                "Unauthorized",
-                "Invalid username or password",
-                request.getRequestURI());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
-    }
+                ErrorResponse error = new ErrorResponse(
+                                LocalDateTime.now(),
+                                HttpStatus.UNAUTHORIZED.value(),
+                                "Unauthorized",
+                                "Invalid username or password",
+                                request.getRequestURI());
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        }
 
-    /**
-     * Handle username not found exception
-     * For security reasons, we return the same message as bad credentials
-     */
-    @ExceptionHandler(UsernameNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleUsernameNotFound(
-            UsernameNotFoundException ex,
-            HttpServletRequest request) {
+        /**
+         * Handle username not found exception
+         * For security reasons, we return the same message as bad credentials
+         */
+        @ExceptionHandler(UsernameNotFoundException.class)
+        public ResponseEntity<ErrorResponse> handleUsernameNotFound(
+                        UsernameNotFoundException ex,
+                        HttpServletRequest request) {
 
-        ErrorResponse error = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.UNAUTHORIZED.value(),
-                "Unauthorized",
-                "Invalid username or password",
-                request.getRequestURI());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
-    }
+                ErrorResponse error = new ErrorResponse(
+                                LocalDateTime.now(),
+                                HttpStatus.UNAUTHORIZED.value(),
+                                "Unauthorized",
+                                "Invalid username or password",
+                                request.getRequestURI());
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        }
 
-    /**
-     * Handle account locked exception
-     */
-    @ExceptionHandler(AccountLockedException.class)
-    public ResponseEntity<ErrorResponse> handleAccountLocked(
-            AccountLockedException ex,
-            HttpServletRequest request) {
+        /**
+         * Handle account locked exception
+         */
+        @ExceptionHandler(AccountLockedException.class)
+        public ResponseEntity<ErrorResponse> handleAccountLocked(
+                        AccountLockedException ex,
+                        HttpServletRequest request) {
 
-        ErrorResponse error = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.FORBIDDEN.value(),
-                "Forbidden",
-                ex.getMessage(),
-                request.getRequestURI());
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
-    }
+                ErrorResponse error = new ErrorResponse(
+                                LocalDateTime.now(),
+                                HttpStatus.FORBIDDEN.value(),
+                                "Forbidden",
+                                ex.getMessage(),
+                                request.getRequestURI());
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+        }
 
-    /**
-     * Handle access denied exception (unauthorized role)
-     */
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ErrorResponse> handleAccessDenied(
-            AccessDeniedException ex,
-            HttpServletRequest request) {
+        /**
+         * Handle token refresh exception (expired, revoked, or not found refresh token)
+         */
+        @ExceptionHandler(TokenRefreshException.class)
+        public ResponseEntity<ErrorResponse> handleTokenRefreshException(
+                        TokenRefreshException ex,
+                        HttpServletRequest request) {
 
-        ErrorResponse error = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.FORBIDDEN.value(),
-                "Forbidden",
-                "You do not have permission to access this resource",
-                request.getRequestURI());
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
-    }
+                ErrorResponse error = new ErrorResponse(
+                                LocalDateTime.now(),
+                                HttpStatus.FORBIDDEN.value(),
+                                "Forbidden",
+                                ex.getMessage(),
+                                request.getRequestURI());
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+        }
 
-    /**
-     * Handle error when username already exists
-     */
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(
-            IllegalArgumentException ex,
-            HttpServletRequest request) {
+        /**
+         * Handle access denied exception (unauthorized role)
+         */
+        @ExceptionHandler(AccessDeniedException.class)
+        public ResponseEntity<ErrorResponse> handleAccessDenied(
+                        AccessDeniedException ex,
+                        HttpServletRequest request) {
 
-        ErrorResponse error = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                "Bad Request",
-                ex.getMessage(),
-                request.getRequestURI());
+                ErrorResponse error = new ErrorResponse(
+                                LocalDateTime.now(),
+                                HttpStatus.FORBIDDEN.value(),
+                                "Forbidden",
+                                "You do not have permission to access this resource",
+                                request.getRequestURI());
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+        }
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
-    }
+        /**
+         * Handle error when username already exists
+         */
+        @ExceptionHandler(IllegalArgumentException.class)
+        public ResponseEntity<ErrorResponse> handleIllegalArgumentException(
+                        IllegalArgumentException ex,
+                        HttpServletRequest request) {
 
-    /**
-     * Handle validation errors (from @Valid)
-     */
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationException(
-            MethodArgumentNotValidException ex,
-            HttpServletRequest request) {
+                ErrorResponse error = new ErrorResponse(
+                                LocalDateTime.now(),
+                                HttpStatus.BAD_REQUEST.value(),
+                                "Bad Request",
+                                ex.getMessage(),
+                                request.getRequestURI());
 
-        StringBuilder errorMessage = new StringBuilder("Validation failed: ");
-        ex.getBindingResult().getAllErrors().forEach(error -> {
-            String fieldName = ((FieldError) error).getField();
-            String message = error.getDefaultMessage();
-            errorMessage.append("[").append(fieldName).append(": ").append(message).append("] ");
-        });
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
 
-        ErrorResponse error = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                "Validation Failed",
-                errorMessage.toString().trim(),
-                request.getRequestURI());
+        /**
+         * Handle validation errors (from @Valid)
+         */
+        @ExceptionHandler(MethodArgumentNotValidException.class)
+        public ResponseEntity<ErrorResponse> handleValidationException(
+                        MethodArgumentNotValidException ex,
+                        HttpServletRequest request) {
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
-    }
+                StringBuilder errorMessage = new StringBuilder("Validation failed: ");
+                ex.getBindingResult().getAllErrors().forEach(error -> {
+                        String fieldName = ((FieldError) error).getField();
+                        String message = error.getDefaultMessage();
+                        errorMessage.append("[").append(fieldName).append(": ").append(message).append("] ");
+                });
 
-    /**
-     * Handle generic exceptions
-     */
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGenericException(
-            Exception ex,
-            HttpServletRequest request) {
+                ErrorResponse error = new ErrorResponse(
+                                LocalDateTime.now(),
+                                HttpStatus.BAD_REQUEST.value(),
+                                "Validation Failed",
+                                errorMessage.toString().trim(),
+                                request.getRequestURI());
 
-        ErrorResponse error = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Internal Server Error",
-                "An unexpected error occurred: " + ex.getMessage(),
-                request.getRequestURI());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-    }
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+
+        /**
+         * Handle generic exceptions
+         */
+        @ExceptionHandler(Exception.class)
+        public ResponseEntity<ErrorResponse> handleGenericException(
+                        Exception ex,
+                        HttpServletRequest request) {
+
+                ErrorResponse error = new ErrorResponse(
+                                LocalDateTime.now(),
+                                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                                "Internal Server Error",
+                                "An unexpected error occurred: " + ex.getMessage(),
+                                request.getRequestURI());
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
 }

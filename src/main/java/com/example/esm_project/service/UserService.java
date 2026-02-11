@@ -2,6 +2,8 @@ package com.example.esm_project.service;
 
 import com.example.esm_project.dto.RegisterRequest;
 import com.example.esm_project.dto.RegisterResponse;
+import com.example.esm_project.dto.UserProfileResponse;
+import com.example.esm_project.dto.UserUpdateRoleStatusRequest;
 import com.example.esm_project.entity.User;
 import com.example.esm_project.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -69,5 +71,78 @@ public class UserService {
                 user.getFullName(),
                 user.getRole(),
                 user.getStatus()));
+    }
+
+    @Transactional(readOnly = true)
+    public Page<RegisterResponse> getAllUsers(String search, Pageable pageable) {
+        Page<User> users;
+        if (search != null && !search.trim().isEmpty()) {
+            users = userRepository.searchAllUsers(search, pageable);
+        } else {
+            users = userRepository.findAll(pageable);
+        }
+        return users.map(user -> new RegisterResponse(
+                user.getId(),
+                user.getUsername(),
+                user.getFullName(),
+                user.getRole(),
+                user.getStatus()));
+    }
+
+    /**
+     * Update user role and status
+     * 
+     * @param userId  user ID
+     * @param request update information
+     * @return updated user information
+     */
+    @Transactional
+    public RegisterResponse updateUserRoleStatus(Long userId, UserUpdateRoleStatusRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+
+        user.setRole(request.getRole());
+        user.setStatus(request.getStatus());
+
+        User updatedUser = userRepository.save(user);
+
+        return new RegisterResponse(
+                updatedUser.getId(),
+                updatedUser.getUsername(),
+                updatedUser.getFullName(),
+                updatedUser.getRole(),
+                updatedUser.getStatus());
+    }
+
+    @Transactional(readOnly = true)
+    public RegisterResponse getUserById(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+
+        return new RegisterResponse(
+                user.getId(),
+                user.getUsername(),
+                user.getFullName(),
+                user.getRole(),
+                user.getStatus());
+    }
+
+    /**
+     * Get profile of the current authenticated user
+     * 
+     * @param username the username from security context
+     * @return UserProfileResponse
+     */
+    @Transactional(readOnly = true)
+    public UserProfileResponse getProfileByUsername(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found: " + username));
+
+        return new UserProfileResponse(
+                user.getId(),
+                user.getUsername(),
+                user.getFullName(),
+                user.getRole(),
+                user.getStatus());
     }
 }

@@ -51,7 +51,7 @@ public class Submission {
     @Column(name = "reset_at")
     private LocalDateTime resetAt;
 
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @PrePersist
