@@ -7,7 +7,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import com.example.esm_project.dto.SubmissionValueResponse;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "approval_logs")
@@ -41,6 +46,10 @@ public class ApprovalLog {
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "snapshot_values", columnDefinition = "jsonb")
+    private List<SubmissionValueResponse> snapshotValues;
 
     @PrePersist
     protected void onCreate() {

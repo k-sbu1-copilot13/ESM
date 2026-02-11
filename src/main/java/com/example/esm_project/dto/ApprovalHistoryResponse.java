@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -21,4 +22,5 @@ public class ApprovalHistoryResponse {
     private String comment;
     private Integer atStep;
     private LocalDateTime actedAt;
+    private List<SubmissionValueResponse> historicalValues;
 }

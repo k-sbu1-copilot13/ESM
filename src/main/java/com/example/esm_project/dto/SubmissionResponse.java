@@ -21,6 +21,7 @@ public class SubmissionResponse {
     private String employeeName;
     private List<SubmissionValueResponse> submissionValues;
     private List<WorkflowStepStatusResponse> workflowSteps;
+    private List<ApprovalHistoryResponse> fullHistory;
     private SubmissionStatus status;
     private Integer currentStep;
     private LocalDateTime createdAt;
