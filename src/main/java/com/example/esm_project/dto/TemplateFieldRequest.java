@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import com.example.esm_project.constant.ValidationConstants;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,7 +18,8 @@ import lombok.NoArgsConstructor;
 public class TemplateFieldRequest {
 
     @NotBlank(message = "Field label is required")
-    @Size(max = 100, message = "Label must not exceed 100 characters")
+    @Size(max = ValidationConstants.LABEL_MAX, message = "Label must not exceed " + ValidationConstants.LABEL_MAX
+            + " characters")
     private String label;
 
     @NotNull(message = "Component type is required")
