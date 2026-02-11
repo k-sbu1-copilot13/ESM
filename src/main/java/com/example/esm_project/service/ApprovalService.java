@@ -3,6 +3,7 @@ package com.example.esm_project.service;
 import com.example.esm_project.dto.ApprovalActionRequest;
 import com.example.esm_project.dto.ApprovalHistoryResponse;
 import com.example.esm_project.dto.SubmissionResponse;
+import com.example.esm_project.dto.SubmissionValueResponse;
 import com.example.esm_project.entity.ApprovalLog;
 import com.example.esm_project.entity.Submission;
 import com.example.esm_project.entity.User;
@@ -18,6 +19,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -77,17 +81,28 @@ public class ApprovalService {
             throw new IllegalArgumentException("Invalid action: " + action);
         }
 
-        // 6. Save Approval Log
+        // 6. Capture Snapshot of current values
+        List<SubmissionValueResponse> snapshot = submission.getValues().stream()
+                .map(v -> SubmissionValueResponse.builder()
+                        .fieldId(v.getField().getId())
+                        .label(v.getField().getLabel())
+                        .componentType(v.getField().getComponentType())
+                        .value(v.getFieldValue())
+                        .build())
+                .collect(Collectors.toList());
+
+        // 7. Save Approval Log
         ApprovalLog log = ApprovalLog.builder()
                 .submission(submission)
                 .manager(manager)
                 .action(action)
                 .comment(request.getComment())
                 .atStep(stepAtAction) // Record the step that was acted upon
+                .snapshotValues(snapshot)
                 .build();
         approvalLogRepository.save(log);
 
-        // 7. Save Submission
+        // 8. Save Submission
         Submission saved = submissionRepository.save(submission);
 
         return submissionService.mapToResponse(saved);
@@ -144,6 +159,7 @@ public class ApprovalService {
                 .comment(log.getComment())
                 .atStep(log.getAtStep())
                 .actedAt(log.getCreatedAt())
+                .historicalValues(log.getSnapshotValues())
                 .build();
     }
 }

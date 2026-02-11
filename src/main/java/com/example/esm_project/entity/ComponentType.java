@@ -41,12 +41,19 @@ public enum ComponentType {
                 }
             }
             case TEXT_SHORT -> {
-                if (value.length() > 255) {
-                    throw new IllegalArgumentException(label + " is too long (max 255 chars)");
+                if (value.length() > com.example.esm_project.constant.ValidationConstants.SHORT_TEXT_MAX) {
+                    throw new IllegalArgumentException(label + " is too long (max "
+                            + com.example.esm_project.constant.ValidationConstants.SHORT_TEXT_MAX + " chars)");
+                }
+            }
+            case TEXT_AREA -> {
+                if (value.length() > com.example.esm_project.constant.ValidationConstants.LONG_TEXT_MAX) {
+                    throw new IllegalArgumentException(label + " is too long (max "
+                            + com.example.esm_project.constant.ValidationConstants.LONG_TEXT_MAX + " chars)");
                 }
             }
             default -> {
-            } // TEXT_AREA, SELECT_BOX (might need more later)
+            } // SELECT_BOX, etc. (might need more later)
         }
     }
 }

@@ -4,6 +4,7 @@ import com.example.esm_project.dto.SubmissionRequest;
 import com.example.esm_project.dto.SubmissionResponse;
 import com.example.esm_project.dto.SubmissionValueResponse;
 import com.example.esm_project.dto.WorkflowStepStatusResponse;
+import com.example.esm_project.dto.ApprovalHistoryResponse;
 import com.example.esm_project.entity.ApprovalLog;
 import com.example.esm_project.entity.FormTemplate;
 import com.example.esm_project.entity.Submission;
@@ -259,13 +260,29 @@ public class SubmissionService {
                             .status(stepStatus)
                             .comment(stepLog != null ? stepLog.getComment() : null)
                             .updatedAt(stepLog != null ? stepLog.getCreatedAt() : null)
+                            .historicalValues(stepLog != null ? stepLog.getSnapshotValues() : null)
                             .build();
                 })
+                .collect(Collectors.toList());
+
+        List<ApprovalHistoryResponse> fullHistory = allLogs.stream()
+                .map(log -> ApprovalHistoryResponse.builder()
+                        .id(log.getId())
+                        .submissionId(log.getSubmission().getId())
+                        .templateTitle(log.getSubmission().getTemplate().getTitle())
+                        .employeeName(log.getSubmission().getEmployee().getFullName())
+                        .action(log.getAction())
+                        .comment(log.getComment())
+                        .atStep(log.getAtStep())
+                        .actedAt(log.getCreatedAt())
+                        .historicalValues(log.getSnapshotValues())
+                        .build())
                 .collect(Collectors.toList());
 
         return SubmissionResponse.builder().id(s.getId()).templateId(s.getTemplate().getId())
                 .templateTitle(s.getTemplate().getTitle()).employeeId(s.getEmployee().getId())
                 .employeeName(s.getEmployee().getFullName()).submissionValues(values).workflowSteps(workflowSteps)
+                .fullHistory(fullHistory)
                 .status(s.getStatus()).currentStep(s.getCurrentStep()).createdAt(s.getCreatedAt()).build();
     }
 }
