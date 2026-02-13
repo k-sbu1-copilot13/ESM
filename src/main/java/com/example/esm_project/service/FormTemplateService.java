@@ -6,6 +6,7 @@ import com.example.esm_project.entity.FormTemplate;
 import com.example.esm_project.entity.TemplateField;
 import com.example.esm_project.entity.User;
 import com.example.esm_project.entity.WorkflowConfig;
+import com.example.esm_project.exception.ResourceNotFoundException;
 import com.example.esm_project.repository.FormTemplateRepository;
 import com.example.esm_project.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -49,8 +50,8 @@ public class FormTemplateService {
         if (request.getWorkflowSteps() != null) {
             request.getWorkflowSteps().forEach(stepReq -> {
                 User manager = userRepository.findById(stepReq.getManagerId())
-                        .orElseThrow(() -> new IllegalArgumentException(
-                                "Manager not found with id: " + stepReq.getManagerId()));
+                        .orElseThrow(() -> new ResourceNotFoundException(
+                                "User", stepReq.getManagerId()));
 
                 if (!"MANAGER".equals(manager.getRole())) {
                     throw new IllegalArgumentException("User " + manager.getUsername() + " is not a MANAGER");
@@ -72,7 +73,7 @@ public class FormTemplateService {
     @Transactional(readOnly = true)
     public FormTemplateResponse getTemplateById(Long id) {
         FormTemplate template = formTemplateRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Template not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Template", id));
         return mapToResponse(template);
     }
 
@@ -90,7 +91,7 @@ public class FormTemplateService {
     @Transactional
     public FormTemplateResponse updateTemplate(Long id, FormTemplateRequest request) {
         FormTemplate template = formTemplateRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Template not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Template", id));
 
         template.setTitle(request.getTitle());
         template.setDescription(request.getDescription());
@@ -118,8 +119,8 @@ public class FormTemplateService {
         if (request.getWorkflowSteps() != null) {
             request.getWorkflowSteps().forEach(stepReq -> {
                 User manager = userRepository.findById(stepReq.getManagerId())
-                        .orElseThrow(() -> new IllegalArgumentException(
-                                "Manager not found with id: " + stepReq.getManagerId()));
+                        .orElseThrow(() -> new ResourceNotFoundException(
+                                "User", stepReq.getManagerId()));
 
                 if (!"MANAGER".equals(manager.getRole())) {
                     throw new IllegalArgumentException("User " + manager.getUsername() + " is not a MANAGER");
@@ -141,7 +142,7 @@ public class FormTemplateService {
     @Transactional
     public void deleteTemplate(Long id) {
         if (!formTemplateRepository.existsById(id)) {
-            throw new IllegalArgumentException("Template not found with id: " + id);
+            throw new ResourceNotFoundException("Template", id);
         }
         formTemplateRepository.deleteById(id);
     }
@@ -149,7 +150,7 @@ public class FormTemplateService {
     @Transactional
     public FormTemplateResponse updateStatus(Long id, boolean active) {
         FormTemplate template = formTemplateRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Template not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Template", id));
         template.setActive(active);
         FormTemplate savedTemplate = formTemplateRepository.save(template);
         return mapToResponse(savedTemplate);
@@ -169,7 +170,7 @@ public class FormTemplateService {
     @Transactional(readOnly = true)
     public FormTemplateResponse getActiveTemplateById(Long id) {
         FormTemplate template = formTemplateRepository.findByIdAndIsActiveTrue(id)
-                .orElseThrow(() -> new IllegalArgumentException("Active template not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Active template", id));
         return mapToResponse(template);
     }
 

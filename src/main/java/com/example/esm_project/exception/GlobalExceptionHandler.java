@@ -110,7 +110,59 @@ public class GlobalExceptionHandler {
         }
 
         /**
-         * Handle error when username already exists
+         * Handle resource not found (e.g., user, template, submission not found by ID)
+         */
+        @ExceptionHandler(ResourceNotFoundException.class)
+        public ResponseEntity<ErrorResponse> handleResourceNotFound(
+                        ResourceNotFoundException ex,
+                        HttpServletRequest request) {
+
+                ErrorResponse error = new ErrorResponse(
+                                LocalDateTime.now(),
+                                HttpStatus.NOT_FOUND.value(),
+                                "Not Found",
+                                ex.getMessage(),
+                                request.getRequestURI());
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+        }
+
+        /**
+         * Handle unauthorized access to a specific resource
+         * (business-level authorization, not role-based)
+         */
+        @ExceptionHandler(UnauthorizedAccessException.class)
+        public ResponseEntity<ErrorResponse> handleUnauthorizedAccess(
+                        UnauthorizedAccessException ex,
+                        HttpServletRequest request) {
+
+                ErrorResponse error = new ErrorResponse(
+                                LocalDateTime.now(),
+                                HttpStatus.FORBIDDEN.value(),
+                                "Forbidden",
+                                ex.getMessage(),
+                                request.getRequestURI());
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+        }
+
+        /**
+         * Handle duplicate resource (e.g., username already exists)
+         */
+        @ExceptionHandler(DuplicateResourceException.class)
+        public ResponseEntity<ErrorResponse> handleDuplicateResource(
+                        DuplicateResourceException ex,
+                        HttpServletRequest request) {
+
+                ErrorResponse error = new ErrorResponse(
+                                LocalDateTime.now(),
+                                HttpStatus.CONFLICT.value(),
+                                "Conflict",
+                                ex.getMessage(),
+                                request.getRequestURI());
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+        }
+
+        /**
+         * Handle validation/business rule errors (e.g., invalid field values)
          */
         @ExceptionHandler(IllegalArgumentException.class)
         public ResponseEntity<ErrorResponse> handleIllegalArgumentException(

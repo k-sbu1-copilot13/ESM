@@ -10,6 +10,8 @@ import com.example.esm_project.entity.User;
 import com.example.esm_project.entity.WorkflowConfig;
 import com.example.esm_project.enums.ApprovalAction;
 import com.example.esm_project.enums.SubmissionStatus;
+import com.example.esm_project.exception.ResourceNotFoundException;
+import com.example.esm_project.exception.UnauthorizedAccessException;
 import com.example.esm_project.repository.ApprovalLogRepository;
 import com.example.esm_project.repository.SubmissionRepository;
 import com.example.esm_project.repository.UserRepository;
@@ -37,11 +39,11 @@ public class ApprovalService {
     public SubmissionResponse processApproval(Long submissionId, Long managerId, ApprovalActionRequest request) {
         // 1. Fetch Submission
         Submission submission = submissionRepository.findById(submissionId)
-                .orElseThrow(() -> new IllegalArgumentException("Submission not found with id: " + submissionId));
+                .orElseThrow(() -> new ResourceNotFoundException("Submission", submissionId));
 
         // 2. Fetch Manager
         User manager = userRepository.findById(managerId)
-                .orElseThrow(() -> new IllegalArgumentException("Manager not found with id: " + managerId));
+                .orElseThrow(() -> new ResourceNotFoundException("Manager", managerId));
 
         // 3. Verify if this manager is assigned to the current step
         WorkflowConfig currentStepConfig = workflowConfigRepository
@@ -50,7 +52,7 @@ public class ApprovalService {
                         "No workflow config found for step " + submission.getCurrentStep()));
 
         if (!currentStepConfig.getManager().getId().equals(managerId)) {
-            throw new IllegalArgumentException("You are not authorized to approve this step");
+            throw new UnauthorizedAccessException("You are not authorized to approve this step");
         }
 
         ApprovalAction action = request.getAction();
@@ -118,7 +120,7 @@ public class ApprovalService {
     public SubmissionResponse getSubmissionDetailForManager(Long id, Long managerId) {
         // 1. Fetch Submission
         Submission submission = submissionRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Submission not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Submission", id));
 
         // 2. Authorization: Kiểm tra xem manager này có được quyền xem đơn này không
         // Quyền xem 1: manager đã từng tham gia xử lý (có trong approval_logs)
@@ -135,7 +137,7 @@ public class ApprovalService {
         }
 
         if (!hasParticipated && !isCurrentApprover) {
-            throw new IllegalArgumentException(
+            throw new UnauthorizedAccessException(
                     "You are not authorized to view this submission as you have not participated in its approval process.");
         }
 

@@ -13,6 +13,8 @@ import com.example.esm_project.entity.TemplateField;
 import com.example.esm_project.entity.User;
 import com.example.esm_project.enums.ApprovalAction;
 import com.example.esm_project.enums.SubmissionStatus;
+import com.example.esm_project.exception.ResourceNotFoundException;
+import com.example.esm_project.exception.UnauthorizedAccessException;
 import com.example.esm_project.repository.ApprovalLogRepository;
 import com.example.esm_project.repository.FormTemplateRepository;
 import com.example.esm_project.repository.SubmissionRepository;
@@ -47,23 +49,23 @@ public class SubmissionService {
     private SubmissionResponse processSubmission(SubmissionRequest request, Long employeeId, boolean isSubmit) {
         // 1. Fetch Template
         FormTemplate template = formTemplateRepository.findByIdAndIsActiveTrue(request.getTemplateId())
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Active template not found with id: " + request.getTemplateId()));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Active template", request.getTemplateId()));
 
         // 2. Fetch Employee
         User employee = userRepository.findById(employeeId)
-                .orElseThrow(() -> new IllegalArgumentException("Employee not found with id: " + employeeId));
+                .orElseThrow(() -> new ResourceNotFoundException("Employee", employeeId));
 
         Submission submission;
         // 3. Create or Fetch Submission
         if (request.getId() != null) {
             submission = submissionRepository.findById(request.getId())
                     .orElseThrow(
-                            () -> new IllegalArgumentException("Submission not found with id: " + request.getId()));
+                            () -> new ResourceNotFoundException("Submission", request.getId()));
 
             // Validation for Update
             if (!submission.getEmployee().getId().equals(employeeId)) {
-                throw new IllegalArgumentException("You are not authorized to update this submission");
+                throw new UnauthorizedAccessException("You are not authorized to update this submission");
             }
             if (submission.getStatus() != SubmissionStatus.DRAFT
                     && submission.getStatus() != SubmissionStatus.REJECTED) {
@@ -126,7 +128,7 @@ public class SubmissionService {
     @Transactional(readOnly = true)
     public List<SubmissionResponse> getMySubmissions(Long employeeId) {
         User employee = userRepository.findById(employeeId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", employeeId));
 
         return submissionRepository.findByEmployeeOrderByCreatedAtDesc(employee).stream()
                 .map(this::mapToResponse)
@@ -136,7 +138,7 @@ public class SubmissionService {
     @Transactional(readOnly = true)
     public List<SubmissionResponse> getMyDrafts(Long employeeId) {
         User employee = userRepository.findById(employeeId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", employeeId));
 
         return submissionRepository.findByEmployeeAndStatusOrderByCreatedAtDesc(employee, SubmissionStatus.DRAFT)
                 .stream()
@@ -148,7 +150,7 @@ public class SubmissionService {
     public org.springframework.data.domain.Page<SubmissionResponse> getMyDraftsPaginated(Long employeeId, String search,
             org.springframework.data.domain.Pageable pageable) {
         User employee = userRepository.findById(employeeId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", employeeId));
 
         org.springframework.data.domain.Page<Submission> submissions;
         if (search != null && !search.trim().isEmpty()) {
@@ -163,7 +165,7 @@ public class SubmissionService {
     @Transactional(readOnly = true)
     public List<SubmissionResponse> getMySubmittedSubmissions(Long employeeId) {
         User employee = userRepository.findById(employeeId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", employeeId));
 
         return submissionRepository.findByEmployeeAndStatusNotOrderByCreatedAtDesc(employee, SubmissionStatus.DRAFT)
                 .stream()
@@ -175,7 +177,7 @@ public class SubmissionService {
     public org.springframework.data.domain.Page<SubmissionResponse> getMySubmittedSubmissionsPaginated(Long employeeId,
             String search, org.springframework.data.domain.Pageable pageable) {
         User employee = userRepository.findById(employeeId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", employeeId));
 
         org.springframework.data.domain.Page<Submission> submissions;
         if (search != null && !search.trim().isEmpty()) {
@@ -190,10 +192,10 @@ public class SubmissionService {
     @Transactional(readOnly = true)
     public SubmissionResponse getSubmissionDetail(Long id, Long employeeId) {
         Submission submission = submissionRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Submission not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Submission", id));
 
         if (!submission.getEmployee().getId().equals(employeeId)) {
-            throw new IllegalArgumentException("Unauthorized");
+            throw new UnauthorizedAccessException("You are not authorized to view this submission");
         }
 
         return mapToResponse(submission);
@@ -202,10 +204,10 @@ public class SubmissionService {
     @Transactional
     public void deleteSubmission(Long id, Long employeeId) {
         Submission submission = submissionRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Submission not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Submission", id));
 
         if (!submission.getEmployee().getId().equals(employeeId)) {
-            throw new IllegalArgumentException("You are not authorized to delete this submission");
+            throw new UnauthorizedAccessException("You are not authorized to delete this submission");
         }
 
         if (submission.getStatus() != SubmissionStatus.DRAFT) {

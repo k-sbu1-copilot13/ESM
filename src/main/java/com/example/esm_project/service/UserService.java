@@ -5,6 +5,8 @@ import com.example.esm_project.dto.RegisterResponse;
 import com.example.esm_project.dto.UserProfileResponse;
 import com.example.esm_project.dto.UserUpdateRoleStatusRequest;
 import com.example.esm_project.entity.User;
+import com.example.esm_project.exception.DuplicateResourceException;
+import com.example.esm_project.exception.ResourceNotFoundException;
 import com.example.esm_project.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -31,7 +33,7 @@ public class UserService {
     public RegisterResponse registerUser(RegisterRequest request) {
         // Check if username already exists
         if (userRepository.existsByUsername(request.getUsername())) {
-            throw new IllegalArgumentException("Username already exists");
+            throw new DuplicateResourceException("Username already exists");
         }
 
         // Encode password using BCrypt
@@ -99,7 +101,7 @@ public class UserService {
     @Transactional
     public RegisterResponse updateUserRoleStatus(Long userId, UserUpdateRoleStatusRequest request) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("User", userId));
 
         user.setRole(request.getRole());
         user.setStatus(request.getStatus());
@@ -117,7 +119,7 @@ public class UserService {
     @Transactional(readOnly = true)
     public RegisterResponse getUserById(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("User", userId));
 
         return new RegisterResponse(
                 user.getId(),
@@ -136,7 +138,7 @@ public class UserService {
     @Transactional(readOnly = true)
     public UserProfileResponse getProfileByUsername(String username) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found: " + username));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
 
         return new UserProfileResponse(
                 user.getId(),

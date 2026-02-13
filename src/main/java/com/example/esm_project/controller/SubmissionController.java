@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -38,14 +39,14 @@ public class SubmissionController {
     @Operation(summary = "Save a draft", description = "Save form data as a draft. Skips required field validation.")
     public ResponseEntity<SubmissionResponse> saveDraft(
             @Valid @RequestBody SubmissionRequest request) {
-        return ResponseEntity.ok(submissionService.saveDraft(request, getCurrentUserId()));
+        return ResponseEntity.status(HttpStatus.CREATED).body(submissionService.saveDraft(request, getCurrentUserId()));
     }
 
     @PostMapping("/submit")
     @Operation(summary = "Submit a form", description = "Submit form data for approval. Performs strict validation on required fields.")
     public ResponseEntity<SubmissionResponse> submit(
             @Valid @RequestBody SubmissionRequest request) {
-        return ResponseEntity.ok(submissionService.submit(request, getCurrentUserId()));
+        return ResponseEntity.status(HttpStatus.CREATED).body(submissionService.submit(request, getCurrentUserId()));
     }
 
     @GetMapping("/me")

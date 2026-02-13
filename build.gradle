@@ -68,7 +68,7 @@ flyway {
 	cleanDisabled = false
 	user = System.getenv('DB_USERNAME') ?: 'postgres'
 	password = System.getenv('DB_PASSWORD') ?: 'postgres'
-	url = System.getenv('DB_URL') ?: 'jdbc:postgresql://localhost:5432/esm_db'
+	url = System.getenv('DB_URL') ?: 'jdbc:postgresql://localhost:5433/esm_db'
 	locations = ['classpath:db/migration']
 }
 
