@@ -7,7 +7,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -181,25 +180,24 @@ public class GlobalExceptionHandler {
 
         /**
          * Handle validation errors (from @Valid)
+         * Returns a structured `fields` map so clients can identify which field failed.
          */
         @ExceptionHandler(MethodArgumentNotValidException.class)
         public ResponseEntity<ErrorResponse> handleValidationException(
                         MethodArgumentNotValidException ex,
                         HttpServletRequest request) {
 
-                StringBuilder errorMessage = new StringBuilder("Validation failed: ");
-                ex.getBindingResult().getAllErrors().forEach(error -> {
-                        String fieldName = ((FieldError) error).getField();
-                        String message = error.getDefaultMessage();
-                        errorMessage.append("[").append(fieldName).append(": ").append(message).append("] ");
-                });
+                java.util.Map<String, String> fields = new java.util.LinkedHashMap<>();
+                ex.getBindingResult().getFieldErrors().forEach(
+                                fieldError -> fields.put(fieldError.getField(), fieldError.getDefaultMessage()));
 
                 ErrorResponse error = new ErrorResponse(
                                 LocalDateTime.now(),
                                 HttpStatus.BAD_REQUEST.value(),
                                 "Validation Failed",
-                                errorMessage.toString().trim(),
-                                request.getRequestURI());
+                                "One or more fields are invalid",
+                                request.getRequestURI(),
+                                fields);
 
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
