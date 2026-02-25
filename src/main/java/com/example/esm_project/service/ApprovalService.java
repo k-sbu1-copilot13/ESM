@@ -17,6 +17,7 @@ import com.example.esm_project.repository.SubmissionRepository;
 import com.example.esm_project.repository.UserRepository;
 import com.example.esm_project.repository.WorkflowConfigRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ApprovalService {
 
     private final SubmissionRepository submissionRepository;
@@ -94,7 +96,7 @@ public class ApprovalService {
                 .collect(Collectors.toList());
 
         // 7. Save Approval Log
-        ApprovalLog log = ApprovalLog.builder()
+        ApprovalLog approvalLog = ApprovalLog.builder()
                 .submission(submission)
                 .manager(manager)
                 .action(action)
@@ -102,10 +104,18 @@ public class ApprovalService {
                 .atStep(stepAtAction) // Record the step that was acted upon
                 .snapshotValues(snapshot)
                 .build();
-        approvalLogRepository.save(log);
+        approvalLogRepository.save(approvalLog);
 
         // 8. Save Submission
         Submission saved = submissionRepository.save(submission);
+
+        if (ApprovalAction.APPROVE.equals(action)) {
+            log.info("Submission {} APPROVED at step {} by manager '{}' (userId: {})",
+                    submissionId, stepAtAction, manager.getUsername(), managerId);
+        } else {
+            log.warn("Submission {} REJECTED at step {} by manager '{}' (userId: {}). Comment: '{}'",
+                    submissionId, stepAtAction, manager.getUsername(), managerId, request.getComment());
+        }
 
         return submissionService.mapToResponse(saved);
     }

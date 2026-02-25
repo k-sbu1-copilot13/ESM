@@ -9,6 +9,7 @@ import com.example.esm_project.exception.DuplicateResourceException;
 import com.example.esm_project.exception.ResourceNotFoundException;
 import com.example.esm_project.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserService {
 
     private final UserRepository userRepository;
@@ -49,6 +51,9 @@ public class UserService {
 
         // Save to database
         User savedUser = userRepository.save(user);
+
+        log.info("New user registered — username: '{}', role: '{}' (userId: {})",
+                savedUser.getUsername(), savedUser.getRole(), savedUser.getId());
 
         // Return response (exclude password)
         return new RegisterResponse(
@@ -107,6 +112,9 @@ public class UserService {
         user.setStatus(request.getStatus());
 
         User updatedUser = userRepository.save(user);
+
+        log.info("User {} updated — new role: '{}', new status: '{}'",
+                userId, request.getRole(), request.getStatus());
 
         return new RegisterResponse(
                 updatedUser.getId(),

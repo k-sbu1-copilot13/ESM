@@ -2,6 +2,7 @@ package com.example.esm_project.exception;
 
 import com.example.esm_project.dto.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
  * Global exception handler for the application
  * Provides centralized exception handling across all @RequestMapping methods
  */
+@Slf4j
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -30,6 +32,7 @@ public class GlobalExceptionHandler {
                         BadCredentialsException ex,
                         HttpServletRequest request) {
 
+                log.warn("Bad credentials attempt at: {}", request.getRequestURI());
                 ErrorResponse error = new ErrorResponse(
                                 LocalDateTime.now(),
                                 HttpStatus.UNAUTHORIZED.value(),
@@ -48,6 +51,7 @@ public class GlobalExceptionHandler {
                         UsernameNotFoundException ex,
                         HttpServletRequest request) {
 
+                log.warn("Username not found attempt at: {}", request.getRequestURI());
                 ErrorResponse error = new ErrorResponse(
                                 LocalDateTime.now(),
                                 HttpStatus.UNAUTHORIZED.value(),
@@ -65,6 +69,7 @@ public class GlobalExceptionHandler {
                         AccountLockedException ex,
                         HttpServletRequest request) {
 
+                log.warn("Locked account login attempt at: {} — {}", request.getRequestURI(), ex.getMessage());
                 ErrorResponse error = new ErrorResponse(
                                 LocalDateTime.now(),
                                 HttpStatus.FORBIDDEN.value(),
@@ -82,6 +87,7 @@ public class GlobalExceptionHandler {
                         TokenRefreshException ex,
                         HttpServletRequest request) {
 
+                log.warn("Token refresh failed at: {} — {}", request.getRequestURI(), ex.getMessage());
                 ErrorResponse error = new ErrorResponse(
                                 LocalDateTime.now(),
                                 HttpStatus.FORBIDDEN.value(),
@@ -99,6 +105,7 @@ public class GlobalExceptionHandler {
                         AccessDeniedException ex,
                         HttpServletRequest request) {
 
+                log.warn("Access denied at: {} — {}", request.getRequestURI(), ex.getMessage());
                 ErrorResponse error = new ErrorResponse(
                                 LocalDateTime.now(),
                                 HttpStatus.FORBIDDEN.value(),
@@ -116,6 +123,7 @@ public class GlobalExceptionHandler {
                         ResourceNotFoundException ex,
                         HttpServletRequest request) {
 
+                log.info("Resource not found at: {} — {}", request.getRequestURI(), ex.getMessage());
                 ErrorResponse error = new ErrorResponse(
                                 LocalDateTime.now(),
                                 HttpStatus.NOT_FOUND.value(),
@@ -134,6 +142,7 @@ public class GlobalExceptionHandler {
                         UnauthorizedAccessException ex,
                         HttpServletRequest request) {
 
+                log.warn("Unauthorized access at: {} — {}", request.getRequestURI(), ex.getMessage());
                 ErrorResponse error = new ErrorResponse(
                                 LocalDateTime.now(),
                                 HttpStatus.FORBIDDEN.value(),
@@ -151,6 +160,7 @@ public class GlobalExceptionHandler {
                         DuplicateResourceException ex,
                         HttpServletRequest request) {
 
+                log.warn("Duplicate resource at: {} — {}", request.getRequestURI(), ex.getMessage());
                 ErrorResponse error = new ErrorResponse(
                                 LocalDateTime.now(),
                                 HttpStatus.CONFLICT.value(),
@@ -168,6 +178,7 @@ public class GlobalExceptionHandler {
                         IllegalArgumentException ex,
                         HttpServletRequest request) {
 
+                log.warn("Illegal argument at: {} — {}", request.getRequestURI(), ex.getMessage());
                 ErrorResponse error = new ErrorResponse(
                                 LocalDateTime.now(),
                                 HttpStatus.BAD_REQUEST.value(),
@@ -191,6 +202,7 @@ public class GlobalExceptionHandler {
                 ex.getBindingResult().getFieldErrors().forEach(
                                 fieldError -> fields.put(fieldError.getField(), fieldError.getDefaultMessage()));
 
+                log.warn("Validation failed at: {} — invalid fields: {}", request.getRequestURI(), fields.keySet());
                 ErrorResponse error = new ErrorResponse(
                                 LocalDateTime.now(),
                                 HttpStatus.BAD_REQUEST.value(),
@@ -210,6 +222,7 @@ public class GlobalExceptionHandler {
                         Exception ex,
                         HttpServletRequest request) {
 
+                log.error("Unexpected error at: {}", request.getRequestURI(), ex);
                 ErrorResponse error = new ErrorResponse(
                                 LocalDateTime.now(),
                                 HttpStatus.INTERNAL_SERVER_ERROR.value(),

@@ -10,6 +10,7 @@ import com.example.esm_project.exception.ResourceNotFoundException;
 import com.example.esm_project.repository.FormTemplateRepository;
 import com.example.esm_project.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class FormTemplateService {
 
     private final FormTemplateRepository formTemplateRepository;
@@ -67,6 +69,8 @@ public class FormTemplateService {
         }
 
         FormTemplate savedTemplate = formTemplateRepository.save(template);
+        log.info("Form template created — title: '{}' (templateId: {})", savedTemplate.getTitle(),
+                savedTemplate.getId());
         return mapToResponse(savedTemplate);
     }
 
@@ -136,6 +140,7 @@ public class FormTemplateService {
         }
 
         FormTemplate updatedTemplate = formTemplateRepository.save(template);
+        log.info("Form template {} updated — title: '{}'", id, updatedTemplate.getTitle());
         return mapToResponse(updatedTemplate);
     }
 
@@ -145,6 +150,7 @@ public class FormTemplateService {
             throw new ResourceNotFoundException("Template", id);
         }
         formTemplateRepository.deleteById(id);
+        log.info("Form template {} deleted", id);
     }
 
     @Transactional
@@ -153,6 +159,7 @@ public class FormTemplateService {
                 .orElseThrow(() -> new ResourceNotFoundException("Template", id));
         template.setActive(active);
         FormTemplate savedTemplate = formTemplateRepository.save(template);
+        log.info("Form template {} status changed to: {}", id, active ? "ACTIVE" : "INACTIVE");
         return mapToResponse(savedTemplate);
     }
 
