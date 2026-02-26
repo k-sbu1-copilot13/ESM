@@ -20,6 +20,7 @@ import com.example.esm_project.repository.FormTemplateRepository;
 import com.example.esm_project.repository.SubmissionRepository;
 import com.example.esm_project.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +30,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class SubmissionService {
 
     private final SubmissionRepository submissionRepository;
@@ -122,6 +124,15 @@ public class SubmissionService {
         }
 
         Submission saved = submissionRepository.save(submission);
+
+        if (isSubmit) {
+            log.info("Submission {} submitted by employee '{}' (userId: {}) — templateId: {}",
+                    saved.getId(), employee.getUsername(), employeeId, request.getTemplateId());
+        } else {
+            log.info("Draft {} saved by employee '{}' (userId: {})",
+                    saved.getId(), employee.getUsername(), employeeId);
+        }
+
         return mapToResponse(saved);
     }
 
@@ -215,6 +226,8 @@ public class SubmissionService {
         }
 
         submissionRepository.delete(submission);
+        log.info("Submission {} deleted by employee '{}' (userId: {})",
+                id, submission.getEmployee().getUsername(), employeeId);
     }
 
     public SubmissionResponse mapToResponse(Submission s) {

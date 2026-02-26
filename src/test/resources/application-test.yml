@@ -1,0 +1,35 @@
+# ============================================================
+# Test Profile — dùng H2 in-memory thay PostgreSQL
+# Được kích hoạt bởi @ActiveProfiles("test")
+# ============================================================
+spring:
+  datasource:
+    url: jdbc:h2:mem:esm_test_db;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop   # Tự tạo schema từ @Entity, xóa sau khi test xong
+    show-sql: false           # Bật true nếu cần debug SQL query
+
+  # Tắt Flyway — H2 dùng Hibernate DDL (create-drop) thay thế
+  # Flyway scripts viết cho PostgreSQL syntax, H2 có thể không parse được
+  flyway:
+    enabled: false
+
+# JWT config — secret đủ dài (>= 32 chars) cho HMAC-SHA256
+jwt:
+  secret: test-secret-key-for-integration-testing-minimum-32chars!!
+  access-token:
+    expiration: 86400000         # 24 giờ (ms)
+  refresh-token:
+    expiration: 604800000        # 7 ngày (ms)
+
+logging:
+  level:
+    com.example.esm_project: DEBUG
+    org.springframework.security: WARN  # Giảm noise — bật DEBUG khi cần debug security
+    org.hibernate.SQL: WARN

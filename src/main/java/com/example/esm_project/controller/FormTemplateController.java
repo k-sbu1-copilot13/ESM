@@ -30,33 +30,33 @@ public class FormTemplateController {
 
     @GetMapping
     public ResponseEntity<Page<FormTemplateResponse>> getAllTemplates(
-            @RequestParam(required = false) String search,
+            @RequestParam(name = "search", required = false) String search,
             @ParameterObject Pageable pageable) {
         return ResponseEntity.ok(formTemplateService.getAllTemplates(search, pageable));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<FormTemplateResponse> getTemplateById(@PathVariable Long id) {
+    public ResponseEntity<FormTemplateResponse> getTemplateById(@PathVariable("id") Long id) {
         return ResponseEntity.ok(formTemplateService.getTemplateById(id));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<FormTemplateResponse> updateTemplate(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @Valid @RequestBody FormTemplateRequest request) {
         return ResponseEntity.ok(formTemplateService.updateTemplate(id, request));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTemplate(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteTemplate(@PathVariable("id") Long id) {
         formTemplateService.deleteTemplate(id);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/status")
     public ResponseEntity<FormTemplateResponse> updateStatus(
-            @PathVariable Long id,
-            @RequestParam boolean active) {
+            @PathVariable("id") Long id,
+            @RequestParam(name = "active") boolean active) {
         return ResponseEntity.ok(formTemplateService.updateStatus(id, active));
     }
 }

@@ -11,6 +11,7 @@ import com.example.esm_project.exception.TokenRefreshException;
 import com.example.esm_project.repository.UserRepository;
 import com.example.esm_project.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthService {
 
     private final UserRepository userRepository;
@@ -56,13 +58,16 @@ public class AuthService {
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
 
         // Return response with both tokens
-        return new LoginResponse(
+        LoginResponse response = new LoginResponse(
                 user.getId(),
                 accessToken,
                 refreshToken.getToken(),
                 user.getUsername(),
                 user.getRole(),
                 "Login successful");
+
+        log.info("User '{}' logged in successfully (userId: {})", user.getUsername(), user.getId());
+        return response;
     }
 
     /**
@@ -101,10 +106,14 @@ public class AuthService {
         RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(user);
 
         // 7. Return response with new tokens
-        return RefreshTokenResponse.builder()
+        RefreshTokenResponse response = RefreshTokenResponse.builder()
                 .accessToken(newAccessToken)
                 .refreshToken(newRefreshToken.getToken())
                 .message("Token refreshed successfully")
                 .build();
+
+        log.info("Access token refreshed successfully for user: '{}' (userId: {})",
+                user.getUsername(), user.getId());
+        return response;
     }
 }

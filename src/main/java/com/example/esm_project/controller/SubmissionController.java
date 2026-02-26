@@ -58,7 +58,7 @@ public class SubmissionController {
     @GetMapping("/me/drafts")
     @Operation(summary = "Get my draft submissions", description = "Retrieve all draft submissions by the current employee with pagination and search")
     public ResponseEntity<org.springframework.data.domain.Page<SubmissionResponse>> getMyDrafts(
-            @RequestParam(required = false) String search,
+            @RequestParam(name = "search", required = false) String search,
             @org.springdoc.core.annotations.ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) org.springframework.data.domain.Pageable pageable) {
         return ResponseEntity.ok(submissionService.getMyDraftsPaginated(getCurrentUserId(), search, pageable));
     }
@@ -66,7 +66,7 @@ public class SubmissionController {
     @GetMapping("/me/submitted")
     @Operation(summary = "Get my submitted submissions", description = "Retrieve all submitted forms (PENDING, APPROVED, REJECTED) by the current employee with pagination and search")
     public ResponseEntity<org.springframework.data.domain.Page<SubmissionResponse>> getMySubmittedSubmissions(
-            @RequestParam(required = false) String search,
+            @RequestParam(name = "search", required = false) String search,
             @org.springdoc.core.annotations.ParameterObject @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) org.springframework.data.domain.Pageable pageable) {
         return ResponseEntity
                 .ok(submissionService.getMySubmittedSubmissionsPaginated(getCurrentUserId(), search, pageable));
@@ -75,14 +75,14 @@ public class SubmissionController {
     @GetMapping("/{id}")
     @Operation(summary = "Get submission detail", description = "Retrieve full details of a specific submission")
     public ResponseEntity<SubmissionResponse> getSubmissionDetail(
-            @PathVariable Long id) {
+            @PathVariable("id") Long id) {
         return ResponseEntity.ok(submissionService.getSubmissionDetail(id, getCurrentUserId()));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a submission", description = "Delete a submission. Only DRAFT submissions can be deleted.")
     public ResponseEntity<Void> deleteSubmission(
-            @PathVariable Long id) {
+            @PathVariable("id") Long id) {
         submissionService.deleteSubmission(id, getCurrentUserId());
         return ResponseEntity.noContent().build();
     }

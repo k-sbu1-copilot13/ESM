@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- ============================================================ -->
+    <!-- PROPERTIES                                                    -->
+    <!-- ============================================================ -->
+    <property name="LOG_DIR" value="logs" />
+    <property name="APP_NAME" value="esm-project" />
+
+    <!-- Console log format -->
+    <property name="CONSOLE_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%-5level) %cyan([%thread]) %yellow(%-40.40logger{39}) : %msg%n" />
+
+    <!-- File log format -->
+    <property name="FILE_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %-40.40logger{39} : %msg%n" />
+
+
+    <!-- ============================================================ -->
+    <!-- APPENDER 1: Console — in ra terminal        -->
+    <!-- ============================================================ -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+
+    <!-- ============================================================ -->
+    <!-- APPENDER 2: File — ghi ra file logs/esm-project.log          -->
+    <!-- RollingPolicy: xoay vòng mỗi ngày, giữ tối đa 30 ngày       -->
+    <!-- ============================================================ -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/${APP_NAME}.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- Tên file khi xoay vòng: esm-project.2026-02-25.log -->
+            <fileNamePattern>${LOG_DIR}/${APP_NAME}.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <!-- Giữ tối đa 30 file (30 ngày) -->
+            <maxHistory>30</maxHistory>
+            <!-- Dung lượng tối đa toàn bộ log: 1GB -->
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+
+        <encoder>
+            <pattern>${FILE_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+
+    <!-- ============================================================ -->
+    <!-- LOGGER: Code của project — INFO trở lên                      -->
+    <!-- ============================================================ -->
+    <logger name="com.example.esm_project" level="INFO" additivity="false">
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="FILE" />
+    </logger>
+
+
+    <!-- ============================================================ -->
+    <!-- LOGGER: Spring Security — chỉ xem WARN trở lên              -->
+    <!-- (tránh spam log debug của Spring Security)                   -->
+    <!-- ============================================================ -->
+    <logger name="org.springframework.security" level="WARN" additivity="false">
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="FILE" />
+    </logger>
+
+
+    <!-- ============================================================ -->
+    <!-- LOGGER: Flyway — INFO để xem migration status                -->
+    <!-- ============================================================ -->
+    <logger name="org.flywaydb" level="INFO" additivity="false">
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="FILE" />
+    </logger>
+
+
+    <!-- ============================================================ -->
+    <!-- LOGGER: Hibernate SQL — chỉ bật khi cần debug query          -->
+    <!-- Đổi thành DEBUG để xem câu SQL thực thi                     -->
+    <!-- ============================================================ -->
+    <logger name="org.hibernate.SQL" level="WARN" additivity="false">
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
+
+    <!-- ============================================================ -->
+    <!-- ROOT LOGGER — mặc định cho tất cả thư viện còn lại          -->
+    <!-- Chỉ ghi WARN/ERROR để tránh spam                             -->
+    <!-- ============================================================ -->
+    <root level="WARN">
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="FILE" />
+    </root>
+
+</configuration>

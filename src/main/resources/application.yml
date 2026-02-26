@@ -53,13 +53,7 @@ jwt:
   refresh-token:
     expiration: 86400000
 
-# Logging
-logging:
-  level:
-    org:
-      springframework:
-        security: INFO
-    org.flywaydb: DEBUG
+# Logging — cấu hình chi tiết trong logback-spring.xml (auto-detected bởi Spring Boot)
 
 # Swagger/OpenAPI Configuration
 springdoc:
