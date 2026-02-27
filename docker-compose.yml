@@ -2,6 +2,7 @@ services:
   db:
     image: postgres:16-alpine
     container_name: esm_db
+    restart: unless-stopped
     environment:
       POSTGRES_DB: ${DB_NAME:-esm_db}
       POSTGRES_USER: ${DB_USERNAME:-postgres}
@@ -21,6 +22,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: esm_app
+    restart: unless-stopped
     ports:
       - "8080:8080"
     environment:
